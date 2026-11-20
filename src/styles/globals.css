@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+/* ── SI ACOUSTIC HUD design tokens ───────────────────────────── */
+@theme {
+  --color-bg: #050b17;
+  --color-bg-2: #0c1830;
+  --color-panel: #10243a;
+  --color-cyan: #00d9ff;
+  --color-teal: #00f5d4;
+  --color-royal: #2979ff;
+  --color-violet: #805bff;
+  --color-amber: #ffbf47;
+  --color-danger: #ff5666;
+  --color-ink: #eaf7ff;
+  --color-muted: #8fb3c9;
+  --color-line: rgba(0, 217, 255, 0.18);
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "Inter Variable", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Technical grid + vignette, pure CSS (no JS loop) */
+.hud-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 35%, rgba(41, 121, 255, 0.14), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 90%, rgba(128, 91, 255, 0.08), transparent 70%),
+    linear-gradient(rgba(0, 217, 255, 0.045) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, rgba(0, 217, 255, 0.045) 1px, transparent 1px) 0 0 / 44px 44px,
+    var(--color-bg);
+}
+
+/* Subtle particles: a few CSS-positioned dots drifting slowly */
+.hud-particles span {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--color-cyan);
+  opacity: 0.35;
+  box-shadow: 0 0 6px var(--color-cyan);
+  animation: drift 18s linear infinite;
+}
+
+@keyframes drift {
+  from { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.4; }
+  to { transform: translateY(-120px); opacity: 0; }
+}
+
+/* Floating translucent panel */
+.holo-panel {
+  position: relative;
+  background: linear-gradient(160deg, rgba(16, 36, 58, 0.82), rgba(12, 24, 48, 0.7));
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(0, 217, 255, 0.04) inset, 0 12px 40px -18px rgba(0, 217, 255, 0.25);
+  backdrop-filter: blur(6px);
+}
+.holo-panel::before {
+  /* corner brackets */
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 14px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--color-cyan), var(--color-cyan)) top left / 14px 1px no-repeat,
+    linear-gradient(var(--color-cyan), var(--color-cyan)) top left / 1px 14px no-repeat,
+    linear-gradient(var(--color-cyan), var(--color-cyan)) bottom right / 14px 1px no-repeat,
+    linear-gradient(var(--color-cyan), var(--color-cyan)) bottom right / 1px 14px no-repeat;
+  opacity: 0.7;
+}
+
+.hud-label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.glow-text {
+  text-shadow: 0 0 18px rgba(0, 217, 255, 0.55);
+}
+
+/* AI core rings */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin-rev { to { transform: rotate(-360deg); } }
+@keyframes pulse-core {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+@keyframes ping-ring {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+@keyframes sweep { to { stroke-dashoffset: 0; } }
+
+.ring-spin { transform-origin: center; transform-box: fill-box; animation: spin 40s linear infinite; }
+.ring-spin-fast { transform-origin: center; transform-box: fill-box; animation: spin 14s linear infinite; }
+.ring-spin-rev { transform-origin: center; transform-box: fill-box; animation: spin-rev 26s linear infinite; }
+.core-pulse { transform-origin: center; transform-box: fill-box; animation: pulse-core 4s ease-in-out infinite; }
+.listening .core-pulse { animation-duration: 1.1s; }
+.ping { transform-origin: center; transform-box: fill-box; animation: ping-ring 1.6s ease-out infinite; }
+.wave-bar { transform-origin: center; animation: wave 0.9s ease-in-out infinite; }
+
+.fade-up { animation: fade-up 0.35s ease-out both; }
+@keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Low-motion: OS preference OR manual toggle (TV / low-power) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .hud-particles { display: none; }
+}
+html[data-motion="low"] *,
+html[data-motion="low"] *::before,
+html[data-motion="low"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+html[data-motion="low"] .hud-particles { display: none; }
+html[data-motion="low"] .holo-panel { backdrop-filter: none; }
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Scrollbars */
+* { scrollbar-width: thin; scrollbar-color: rgba(0, 217, 255, 0.25) transparent; }
+
+input, select, textarea {
+  background: rgba(5, 11, 23, 0.7);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  color: var(--color-ink);
+}
+input::placeholder, textarea::placeholder { color: #5f7f95; }
